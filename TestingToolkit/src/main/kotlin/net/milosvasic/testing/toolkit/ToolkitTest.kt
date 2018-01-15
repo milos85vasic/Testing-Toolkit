@@ -12,6 +12,8 @@ abstract class ToolkitTest {
     private val logger = ConsoleLogger()
     private val condition = lock.newCondition()
 
+    protected abstract val tag: String
+
     @Test
     fun testFunctionality() {
         beforeTest()
@@ -45,11 +47,16 @@ abstract class ToolkitTest {
         lock(10)
     }
 
-    protected fun lock(timeoutInSeconds: Long) {
+    protected fun lock(timeoutInSeconds: Long, seconds: Boolean = true) {
         log("Lock [ ON ]: " + timeoutInSeconds)
         lock.lock()
         try {
-            condition.await(timeoutInSeconds, TimeUnit.SECONDS)
+            val timeUnit = if (seconds) {
+                TimeUnit.SECONDS
+            } else {
+                TimeUnit.MILLISECONDS
+            }
+            condition.await(timeoutInSeconds, timeUnit)
         } catch (e: Exception) {
             Assert.fail("Lock failed: " + e.message)
         } finally {
@@ -67,8 +74,10 @@ abstract class ToolkitTest {
         }
     }
 
-    private fun log(msg: String) {
-        logger.v(javaClass.simpleName, msg)
-    }
+    protected fun log(msg: String) = logger.v(tag, msg)
+
+    protected fun err(msg: String) = logger.e(tag, msg)
+
+    protected fun wrn(msg: String) = logger.w(tag, msg)
 
 }
